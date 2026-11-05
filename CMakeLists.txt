@@ -35,8 +35,11 @@ FetchContent_Declare(kpm_tightbinding
   SOURCE_SUBDIR __populate_only__)
 FetchContent_MakeAvailable(kpm_tightbinding)
 
+# src/kpm.cpp joins at R3 for kpm::jackson_kernel (the R2 sanction,
+# recorded in STATE.md).
 add_library(kpm_tightbinding_core STATIC
-  ${kpm_tightbinding_SOURCE_DIR}/src/lattice.cpp)
+  ${kpm_tightbinding_SOURCE_DIR}/src/lattice.cpp
+  ${kpm_tightbinding_SOURCE_DIR}/src/kpm.cpp)
 target_include_directories(kpm_tightbinding_core PUBLIC
   ${kpm_tightbinding_SOURCE_DIR}/include)
 target_compile_options(kpm_tightbinding_core PRIVATE -Wall -Wextra)
@@ -58,3 +61,27 @@ target_compile_options(test_r1 PRIVATE -Wall -Wextra)
 target_compile_definitions(test_r1 PRIVATE
   KPM_TB_DATA_DIR="${kpm_tightbinding_SOURCE_DIR}/data")
 add_test(NAME r1 COMMAND test_r1)
+
+add_executable(test_r2 tests/test_r2.cpp)
+target_link_libraries(test_r2 PRIVATE kubo Eigen3::Eigen)
+target_compile_options(test_r2 PRIVATE -Wall -Wextra)
+add_test(NAME r2 COMMAND test_r2)
+
+add_executable(test_r3 tests/test_r3.cpp)
+target_link_libraries(test_r3 PRIVATE kubo Eigen3::Eigen)
+target_compile_options(test_r3 PRIVATE -Wall -Wextra)
+add_test(NAME r3 COMMAND test_r3)
+
+add_executable(test_r4 tests/test_r4.cpp)
+target_link_libraries(test_r4 PRIVATE kubo)
+target_compile_options(test_r4 PRIVATE -Wall -Wextra)
+add_test(NAME r4 COMMAND test_r4)
+
+# The R4 clean-metal figure: deterministic regeneration of the data (not
+# a CTest — the gates are test_r4). Defaults are the gated config:
+# ./build/sigma_clean_metal && python3 tools/plot_sigma_clean_metal.py
+add_executable(sigma_clean_metal src/sigma_clean_metal.cpp)
+target_link_libraries(sigma_clean_metal PRIVATE kubo)
+target_compile_options(sigma_clean_metal PRIVATE -Wall -Wextra)
+target_compile_definitions(sigma_clean_metal PRIVATE
+  KUBO_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data")

@@ -1,14 +1,40 @@
 # DESIGN.md — kpm-kubo
 
 Design record for the Kubo–Greenwood conductivity module on the verified
-KPM core. Status: R1 done (2026-11-04). `velocity_x` and
+KPM core. Status: R3 done (2026-11-05). R1: `velocity_x` and
 `kubo_lehmann_ed` are implemented and gated (measured: f-sum relative
 error 2.5e-15 against the 1e-12 bound; closure 3.6e-15 against 1e-12;
 sigma >= 0 exactly; L=2 exact anchor at omega = 2 with weight pi/8;
 exact-DOS cross-gate against the kpm-tightbinding reference CSVs at
-L = 8..14, linf exactly 0). R2–R4 remain throwing stubs. This note fixes
-the scope, the oracles, the rung decomposition with pre-committed gates,
-and the kill criteria.
+L = 8..14, linf exactly 0). R2: `current_moments`, the 2D moment table
+mu_nm = (1/N) Tr[v_x T_n(H') v_x T_m(H')] of Weisse et al. Eq. 155, with
+the deterministic exact trace over the unit basis once n_random >= N and
+the stochastic random +/-1 trace below it; gated at L = 6, n_cheb = 512,
+a = 4.04 against the ED-derived table at matched rescaling, measured
+linf 1.725e-13 against the 1e-12 bound; mu_00 = 2(L-1)/L anchor exact to
+2.2e-16. R3: `optical_conductivity`, sigma_1(omega) from the table
+(Weisse Eqs. 154 + 157 at T = 0, Jackson kernel applied at
+reconstruction, h_nm per Eq. 95); gated at L = 8 with the deterministic
+trace and n_cheb = 512: f-sum on the reconstruction 2.25e-3 against the
+pre-committed 1e-2 bound, and binned L1 vs the R1 Lehmann oracle 0.0775
+against the regression bound 0.16 pinned from the bring-up measurement
+at ~2x (pin derivation in the test_r3.cpp header and STATE.md). R4:
+`drude_weight` (D = (pi/2N)(-<K_x>) from a stochastic K_x-weighted DOS
+trace, O(n_cheb) SpMVs per vector) and the clean-metal figure at
+L = 128, quarter filling, n_cheb = 128, R = 32, stated resolution
+Delta = 4 pi a / n_cheb = 0.397. Drude gate green: weight within Delta
+of omega = 0 matches D at 0.0216 against the pinned 0.045. Leakage gate
+RED against the pre-committed kernel bound: regular-part weight above
+Delta 0.0232 vs 0.0026 (9x). The excess is measured genuine finite-L
+physics of the open lattice — boundary-assisted absorption plus the
+near-Fermi transition clusters at omega_d ~ 4.4 d / L, exact value
+0.0179, decaying ~1/L (weight above omega = 0.4: 14.1% of total at
+L = 32, 7.1% at 64, 3.5% at 128) — not noise, not a reconstruction bug.
+Kill criterion 1 stands as written: the DC output is the gated Drude
+weight; sigma(omega) is reported at omega >= Delta. Whether the leakage
+gate gets a finite-L term in its bound is a DESIGN amendment, not a
+bring-up decision. This note fixes the scope, the oracles, the
+rung decomposition with pre-committed gates, and the kill criteria.
 
 Ordering: second of the three KPM extensions and the cheapest — same
 moment machinery, one new operator.
@@ -139,7 +165,17 @@ To fetch and verify before any number derived from them is quoted:
   Rev. Mod. Phys. 78, 275 (2006), arXiv:cond-mat/0504627 — the KPM
   dynamical-correlation and transport construction: the mu_nm table and
   its reconstruction. The house convention source; re-read, do not quote
-  from memory. Needed from R2 on; R1 used no KPM formula.
+  from memory. Verified at R2 against the arXiv text: the moment table
+  mu_nm = (1/D) Tr[T_n(H~) J T_m(H~) J] (their Eq. 155) of the current
+  matrix-element density j(x, y) (Eq. 153), the stochastic trace over
+  random vectors (Eq. 40), and the effort scaling 2RDN to RDN^2; the
+  h_nm normalization (Eq. 95) and 2D reconstruction (Eq. 154) verified
+  as read at R2 and used at R3. Verified at R3: the noninteracting
+  form sigma^reg(omega) = (1/omega) int j(y+omega, y) (f(y) -
+  f(y+omega)) dy (their Eq. 157, the Boltzmann weights of Eq. 156
+  replaced by Fermi functions) — used at T = 0 as the Fermi-window
+  integral, in the house pi-convention of the R1 oracle (Weisse's own
+  prefactor differs; the oracle is the authority).
 - Kubo (1957), or a standard many-body text (Mahan; Fetter–Walecka), for
   the Kubo–Greenwood formula and its prefactors. Verified at R1: the
   pair-sum form sigma_1(omega) = (pi/N) sum (f_n - f_m) |v_nm|^2 /

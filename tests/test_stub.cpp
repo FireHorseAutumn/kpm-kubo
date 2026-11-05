@@ -1,13 +1,12 @@
-// Interface acceptance test: the stubs exist, carry the
-// documented defaults, and throw std::logic_error until implemented.
-// R1 (velocity_x, kubo_lehmann_ed) is implemented and gated in test_r1;
-// the R2-R4 stubs remain. Every check prints its measured value; any
-// failure exits nonzero.
+// Interface acceptance test: the parameter and matrix types carry the
+// documented defaults and empty states. R1 (velocity_x, kubo_lehmann_ed),
+// R2 (current_moments), R3 (optical_conductivity), and R4 (drude_weight)
+// are implemented and gated in test_r1..test_r4. Every check prints its
+// measured value; any failure exits nonzero.
 
 #include "kubo/kubo.hpp"
 
 #include <cstdio>
-#include <stdexcept>
 #include <string>
 
 namespace {
@@ -18,16 +17,6 @@ void check(bool ok, const char* name, const std::string& detail) {
   std::printf("[%s] %s: %s\n", ok ? "pass" : "FAIL", name, detail.c_str());
   if (!ok)
     ++failures;
-}
-
-template <typename F>
-bool throws_not_implemented(F&& f) {
-  try {
-    f();
-  } catch (const std::logic_error& e) {
-    return std::string(e.what()).find("not implemented") != std::string::npos;
-  }
-  return false;
 }
 
 } // namespace
@@ -51,14 +40,6 @@ int main() {
   std::snprintf(buf, sizeof buf, "n_cheb=%d mu.size=%zu", mt.n_cheb,
                 mt.mu.size());
   check(mt.n_cheb == 0 && mt.mu.empty(), "MomentTable empty state", buf);
-
-  check(throws_not_implemented(
-            [&] { kubo::current_moments(empty, empty, kp); }),
-        "current_moments stub throws", "DESIGN.md R2");
-  check(throws_not_implemented([&] { kubo::optical_conductivity(mt, 0.0); }),
-        "optical_conductivity stub throws", "DESIGN.md R3");
-  check(throws_not_implemented([&] { kubo::drude_weight(empty, empty, 0.0); }),
-        "drude_weight stub throws", "DESIGN.md R4");
 
   std::printf("%s (%d failure%s)\n",
               failures == 0 ? "ALL CHECKS PASSED" : "FAILURES", failures,
