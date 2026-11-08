@@ -30,8 +30,7 @@
 // out of the window. Seed spread at bring-up, 8 seeds: W[0, Delta] in
 // [0.476, 0.496] (sigma ~ 0.008), worst |W - D| = 0.0389 < 0.045.
 //
-// The leakage gate fails against the pre-committed bound. Recorded
-// plainly per the house rule; the bound is not adjusted. Measured
+// The leakage gate fails against the pre-committed bound. Measured
 // regular weight at the gate seed 0.023225 vs the kernel-leakage bound
 // 0.0026 — 9x over.
 // Decomposition: true finite-L regular weight 0.0179 (exact) + kernel
@@ -40,9 +39,20 @@
 // genuine finite-frequency weight — boundary-assisted absorption plus
 // the near-Fermi transition clusters at omega_d ~ 4.4 d / L — decaying
 // only as ~1/L (exact weight above omega = 0.4: 14.1% of the total at
-// L = 32, 7.1% at 64, 3.5% at 128). Kill criterion 1 (DESIGN.md
-// section 4): the honest DC output is the gated Drude weight; a finite
-// DC number exists only as sigma(omega) at omega >= Delta, stated.
+// L = 32, 7.1% at 64, 3.5% at 128).
+//
+// Ruled by Ian 2026-11-08, Option A: Kill criterion 1 (DESIGN.md
+// section 4 — "If the omega -> 0 limit cannot be stated honestly (Drude
+// weight gated, resolution stated), the DC claim is dropped to
+// sigma(omega) at omega >= resolution") is applied test-side. The gated
+// R4 output is the Drude weight, green above; sigma(omega) is reported
+// at omega >= Delta. The leakage comparison below is demoted to an info
+// line: printed in full — measured weight, unmoved kernel bound, and
+// the decomposition — and never asserted. Option B, a physics-informed
+// finite-L leakage bound, is owed as a DESIGN amendment and is
+// legitimate only after the ~1/L model validates as a prediction at
+// fresh L values; a bound fitted to the run it gates is a description,
+// not a gate. Recorded in STATE.md.
 // Every check prints its measured value; any failure exits nonzero.
 
 #include "kubo/kubo.hpp"
@@ -291,12 +301,12 @@ int main() {
   double leak_abs = 0.0, ridge_total = 0.0;
   ridge_leak(n_cheb, a, Delta, leak_abs, ridge_total);
   const double leak_bound = leak_abs * (D / ridge_total);
-  std::snprintf(buf, sizeof buf,
-                "W(Delta,8] = %.6f vs kernel-leakage bound %.6f "
-                "(ridge device: %.6f of %.6f total past 4hw at n_cheb=%d)",
-                W_above, leak_bound, leak_abs, ridge_total, n_cheb);
-  check(W_above < leak_bound,
-        "R4 leakage: regular-part weight vs the clean-metal zero", buf);
+  // Info-only per the 2026-11-08 Kill-1 ruling (header): printed, never
+  // asserted, the bound unmoved.
+  std::printf("[info] leakage (info-only, Kill-1 ruling): W(Delta,8] = %.6f vs "
+              "kernel-leakage bound %.6f (ridge device: %.6f of %.6f total "
+              "past 4hw at n_cheb=%d)\n",
+              W_above, leak_bound, leak_abs, ridge_total, n_cheb);
 
   std::printf("[info] decomposition of the regular weight: true finite-L "
               "%.6f + kernel leakage %.6f; stochastic seed spread at "

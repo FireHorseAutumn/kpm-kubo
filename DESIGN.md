@@ -33,7 +33,12 @@ L = 32, 7.1% at 64, 3.5% at 128) — not noise, not a reconstruction bug.
 Kill criterion 1 stands as written: the DC output is the gated Drude
 weight; sigma(omega) is reported at omega >= Delta. Whether the leakage
 gate gets a finite-L term in its bound is a DESIGN amendment, not a
-bring-up decision. This note fixes the scope, the oracles, the
+bring-up decision. Ruled by Ian 2026-11-08, Option A: Kill 1 applied
+test-side — the leakage comparison is printed in full in test_r4 and
+never asserted; no bound moved. Option B, the physics-informed finite-L
+leakage bound, remains owed: legitimate only after the ~1/L decay model
+validates as a prediction at fresh L values before any re-gating — a
+bound fitted to the run it gates is a description, not a gate. This note fixes the scope, the oracles, the
 rung decomposition with pre-committed gates, and the kill criteria.
 
 Ordering: second of the three KPM extensions and the cheapest — same

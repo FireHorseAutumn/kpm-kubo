@@ -44,8 +44,10 @@ SpMVs per vector, not the 2D-table price) — and the clean-metal figure
 at L = 128, quarter filling, n_cheb = 128, stochastic trace R = 32
 (mandatory at this L). The Drude gate is green: weight within the stated
 resolution Δ = 4πa/n_cheb = 0.397 of ω = 0 matches D at 0.0216 against
-the pinned 0.045. The leakage gate fails against its pre-committed
-bound: regular-part weight above Δ is 0.0232 against the kernel-leakage
+the pinned 0.045. The leakage gate is demoted to an info line per kill
+criterion 1 (ruled 2026-11-08, Option A — printed in full with its
+decomposition, never asserted, the bound unmoved): regular-part weight
+above Δ measures 0.0232 against the kernel-leakage
 bound 0.0026 — the
 excess is genuine finite-L physics of the open lattice (boundary-assisted
 absorption plus the near-Fermi transition clusters; exact value 0.0179,
