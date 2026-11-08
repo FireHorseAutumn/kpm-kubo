@@ -170,6 +170,17 @@ int main() {
 
   std::printf("[info] min sigma_kpm = %.3e over %d fine points\n", smin, n_fine);
 
+  // Positivity, gated (correctness pass 2026-11-08): the Jackson-damped
+  // reconstruction is nonnegative by construction — the product kernel is
+  // positive and the table's density is positive — and STATE.md records
+  // sigma >= 0 exactly on the fine grid; measured min exactly 0.000e+00
+  // here. Teeth verified by perturbation: stripping the Jackson damping
+  // (g_n := 1) drives min sigma to -2.078 (Gibbs) while this gate's
+  // sibling f-sum goes red at 2.0e-2.
+  std::snprintf(buf, sizeof buf, "min sigma_kpm = %.3e over %d fine points",
+                smin, n_fine);
+  check(smin >= 0.0, "R3 sigma(omega) >= 0 on the fine grid", buf);
+
   std::printf("%s (%d failure%s)\n",
               failures == 0 ? "ALL CHECKS PASSED" : "FAILURES", failures,
               failures == 1 ? "" : "s");

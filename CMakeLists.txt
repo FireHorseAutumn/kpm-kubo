@@ -77,6 +77,11 @@ target_link_libraries(test_r4 PRIVATE kubo)
 target_compile_options(test_r4 PRIVATE -Wall -Wextra)
 add_test(NAME r4 COMMAND test_r4)
 
+add_executable(test_separable tests/test_separable.cpp)
+target_link_libraries(test_separable PRIVATE kubo Eigen3::Eigen)
+target_compile_options(test_separable PRIVATE -Wall -Wextra)
+add_test(NAME separable COMMAND test_separable)
+
 # The R4 clean-metal figure: deterministic regeneration of the data (not
 # a CTest — the gates are test_r4). Defaults are the gated config:
 # ./build/sigma_clean_metal && python3 tools/plot_sigma_clean_metal.py

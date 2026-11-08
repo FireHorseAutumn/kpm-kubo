@@ -53,6 +53,21 @@
 // legitimate only after the ~1/L model validates as a prediction at
 // fresh L values; a bound fitted to the run it gates is a description,
 // not a gate. Recorded in STATE.md.
+//
+// Two pins added in the 2026-11-08 correctness pass, both from measured
+// 8-seed spreads at this config (house ~2x discipline, spread over the
+// seeds 0x9E3779B9 + s*0x9E3779B97F4A7C15):
+//   |D - D_exact| < 0.005 (worst seed 0.002391): pins drude_weight's
+//     K_x extraction and Jackson Fermi-edge accuracy against the exact
+//     separable value. The Drude gate alone only compares W[0,Delta] to
+//     the module's own D: it catches gross breakage (the recorded
+//     merge-walk bug goes red at |diff| = 0.49) but tolerates accuracy
+//     drift well past the measured 3.5e-3 — a 3% table-normalization
+//     slip passes it.
+//   |mu_00 - 2(L-1)/L| < 0.009 (worst seed 0.004295): a
+//     catastrophic-breakage guard on the stochastic trace normalization
+//     and seeding. Not a tightening of the recorded hot path — the bound
+//     is ~2x the measured 8-seed spread, not the DOS envelope.
 // Every check prints its measured value; any failure exits nonzero.
 
 #include "kubo/kubo.hpp"
@@ -273,9 +288,12 @@ int main() {
   p.n_cheb = n_cheb; // fixed seed: the stochastic trace at large L
   const kubo::MomentTable mt = kubo::current_moments(H, W, p);
   const double mu00_want = 2.0 * (L - 1) / L;
-  std::printf("[info] stochastic mu_00 = %.6f vs exact 2(L-1)/L = %.6f "
-              "(hot-path indicator, not gated)\n",
-              mt.mu[0], mu00_want);
+  std::snprintf(buf, sizeof buf,
+                "stochastic mu_00 = %.6f vs exact 2(L-1)/L = %.6f, |diff| = %.6f "
+                "(pinned bound 0.009, ~2x the 8-seed worst 0.004295)",
+                mt.mu[0], mu00_want, std::abs(mt.mu[0] - mu00_want));
+  check(std::abs(mt.mu[0] - mu00_want) < 0.009,
+        "R4 stochastic mu_00: trace normalization/seeding guard", buf);
 
   const double omega_max = 8.0;
   const int n_fine = 4096;
@@ -297,6 +315,13 @@ int main() {
   check(drude_err < kDrudeBound,
         "R4 Drude: weight within resolution vs kinetic-energy Drude weight",
         buf);
+
+  std::snprintf(buf, sizeof buf,
+                "D = %.6f vs exact separable %.6f, |diff| = %.6f (pinned bound "
+                "0.005, ~2x the 8-seed worst 0.002391)",
+                D, D_exact, std::abs(D - D_exact));
+  check(std::abs(D - D_exact) < 0.005,
+        "R4 Drude weight vs the exact separable-spectrum value", buf);
 
   double leak_abs = 0.0, ridge_total = 0.0;
   ridge_leak(n_cheb, a, Delta, leak_abs, ridge_total);
